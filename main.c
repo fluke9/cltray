@@ -801,8 +801,8 @@ static void PaintBars(HWND hWnd, HDC hdc) {
     DeleteObject(hFontSmall);
 }
 
-/* ---- position popup near tray area ---- */
-static void ShowPopupNearTray(HWND hWnd) {
+/* ---- position and size popup near tray area ---- */
+static void PositionPopupNearTray(HWND hWnd) {
     POINT pt;
     GetCursorPos(&pt);
 
@@ -833,6 +833,10 @@ static void ShowPopupNearTray(HWND hWnd) {
 
     SetWindowPos(hWnd, HWND_TOPMOST, x, y, POPUP_W, PopupH(),
                  SWP_NOACTIVATE | SWP_SHOWWINDOW);
+}
+
+static void ShowPopupNearTray(HWND hWnd) {
+    PositionPopupNearTray(hWnd);
     ShowWindow(hWnd, SW_SHOWNOACTIVATE);
     SetForegroundWindow(hWnd);
 
@@ -869,14 +873,18 @@ static LRESULT CALLBACK PopupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
             InvalidateRect(hWnd, NULL, FALSE);
         }
         return 0;
-    case WM_FETCHDONE:
+    case WM_FETCHDONE: {
         g_fetching = FALSE;
         KillTimer(hWnd, IDT_SPINNER);
-        /* resize popup in case status changed (error vs normal) */
-        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, POPUP_W, PopupH(),
-                     SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+        /* reposition if height changed (e.g. error → normal after token renewal) */
+        RECT wr;
+        GetWindowRect(hWnd, &wr);
+        int oldH = wr.bottom - wr.top;
+        if (IsWindowVisible(hWnd) && oldH != PopupH())
+            PositionPopupNearTray(hWnd);
         InvalidateRect(hWnd, NULL, FALSE);
         return 0;
+    }
     case WM_LBUTTONDOWN:
         StartAsyncFetch();
         return 0;
