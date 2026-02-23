@@ -1,0 +1,27 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build
+        run: |
+          rc /nologo /fo resource.res resource.rc
+          cl /O2 /W4 /DUNICODE /D_UNICODE main.c parson.c /link /SUBSYSTEM:WINDOWS shell32.lib user32.lib gdi32.lib advapi32.lib winhttp.lib resource.res /OUT:cltray.exe
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: cltray.exe
