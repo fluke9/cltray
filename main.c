@@ -424,9 +424,18 @@ static void FormatResetTime(const char *iso, wchar_t *out, int outSize, BOOL sho
             L"Sunday", L"Monday", L"Tuesday", L"Wednesday",
             L"Thursday", L"Friday", L"Saturday"
         };
-        wsprintfW(out, L"Resets %s %d:%02d",
-                  dayNames[localST.wDayOfWeek],
-                  localST.wHour, localST.wMinute);
+        ULONGLONG diffSec = (resetUI.QuadPart - nowUI.QuadPart) / 10000000ULL;
+        int days = (int)(diffSec / 86400);
+        int hrs  = (int)((diffSec % 86400) / 3600);
+
+        if (days > 0)
+            wsprintfW(out, L"Resets %s %d:%02d (%dd, %dh)",
+                      dayNames[localST.wDayOfWeek],
+                      localST.wHour, localST.wMinute, days, hrs);
+        else
+            wsprintfW(out, L"Resets %s %d:%02d (%dh)",
+                      dayNames[localST.wDayOfWeek],
+                      localST.wHour, localST.wMinute, hrs);
     } else {
         ULONGLONG diffSec = (resetUI.QuadPart - nowUI.QuadPart) / 10000000ULL;
         int hrs  = (int)(diffSec / 3600);
