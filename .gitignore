@@ -1,0 +1,7 @@
+*.exe
+*.obj
+*.res
+*.log
+*.ilk
+*.pdb
+.claude/
